@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "name": "dbeurive/tree",
+  "description": "This package contains a list of PHP utilities used to manipulate trees",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Denis BEURIVE",
+      "email": "dbeurive.github@gmail.com"
+    }
+  ],
+  "keywords": ["tree"],
+  "autoload": {
+    "psr-4": {
+      "dbeurive\\Tree\\": "src"
+    }
+  }
+}
