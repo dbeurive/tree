@@ -1,5 +1,4 @@
 {
-  "version": "1.0.0",
   "name": "dbeurive/tree",
   "description": "This package contains a list of PHP utilities used to manipulate trees",
   "license": "MIT",
