@@ -13,5 +13,8 @@
     "psr-4": {
       "dbeurive\\Tree\\": "src"
     }
+  },
+  "archive": {
+    "exclude": ["/tests", "/examples", "/doc", "/README.md"]
   }
 }
