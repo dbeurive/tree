@@ -111,10 +111,14 @@ class Tree
      * Create a tree from an array.
      * @param array $inArray Array that represents a tree.
      * @param callable|null $inOptDeserializer Function used to deserialize data prior to its injection into the tree.
+     * @param string $inOptDataTag Key, within the arrays, that points to the node's label.
+     *        Default tag is "data".
+     * @param string $inOptChildrenTag Key, within the arrays, that points to the node's children.
+     *        Default tag is "children".
      * @return Tree The function returns a new tree.
      * @throws \Exception
      */
-    static public function fromArray(array $inArray, callable $inOptDeserializer=null) {
+    static public function fromArray(array $inArray, callable $inOptDeserializer=null, $inOptDataTag='data', $inOptChildrenTag='children') {
 
         if (is_null($inOptDeserializer)) {
             $inOptDeserializer = function($inSerialised) {
@@ -124,18 +128,18 @@ class Tree
 
         $result = [ 'tree' => new Tree(), 'index' => [], 'id' => 0 ];
 
-        $builder = function (array &$inCurrentNode, $isLeaf, &$inParentNode, array &$inOutData) use ($inOptDeserializer) {
+        $builder = function (array &$inCurrentNode, $isLeaf, &$inParentNode, array &$inOutData) use ($inOptDeserializer, $inOptDataTag, $inOptChildrenTag) {
 
-            if (! array_key_exists('data', $inCurrentNode)) {
+            if (! array_key_exists($inOptDataTag, $inCurrentNode)) {
                 throw new \Exception("The given array is not valid. No data defined for the current node!");
             }
 
-            if (! array_key_exists('children', $inCurrentNode)) {
+            if (! array_key_exists($inOptChildrenTag, $inCurrentNode)) {
                 throw new \Exception("The given array is not valid. No children defined for the current node!");
             }
 
-            if (! is_array($inCurrentNode['children'])) {
-                throw new \Exception("This given array in not a valid tree. Key 'children' is not an array!");
+            if (! is_array($inCurrentNode[$inOptChildrenTag])) {
+                throw new \Exception("This given array in not a valid tree. Key $inOptChildrenTag is not an array!");
             }
 
             // Generate a unique ID for the current node, so it can be indexed.
@@ -147,7 +151,7 @@ class Tree
             if (is_null($inParentNode)) {
                 /** @var Tree $tree */
                 $tree = $inOutData['tree']; // Create this variable so we have the auto completion and the API checks.
-                $root = new Node($inOptDeserializer($inCurrentNode['data']));
+                $root = new Node($inOptDeserializer($inCurrentNode[$inOptDataTag]));
                 $tree->setRoot($root);
                 $inOutData['index'][$currentNodeId] = $root;
                 return;
@@ -157,7 +161,7 @@ class Tree
             // Therefore, it has been assigned an ID. And the ID has been indexed.
             /** @var Node $parent */
             $parent = $inOutData['index'][$inParentNode['id']]; // Create this variable so we have the auto completion and the API checks.
-            $newNode = $parent->addChild($inOptDeserializer($inCurrentNode['data']));
+            $newNode = $parent->addChild($inOptDeserializer($inCurrentNode[$inOptDataTag]));
             $inOutData['index'][$currentNodeId] = $newNode;
         };
 
