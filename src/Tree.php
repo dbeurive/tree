@@ -26,6 +26,10 @@ class Tree
     private $__dataComparator = null;
     /** @var callable|null Function used to get a unique ID from a node's data. */
     private $__dataIndexBuilder = null;
+    /** @var string Key, within the array representation of a tree, that represents a node's label. */
+    static private $__dataTag = 'data';
+    /** @var string Key, within the array representation of a tree, that represents a node's children. */
+    static private $__childrenTag = 'children';
 
     /**
      * Return a new tree.
@@ -55,6 +59,22 @@ class Tree
     // -----------------------------------------------------------------------------------------------------------------
     // SETTERS
     // -----------------------------------------------------------------------------------------------------------------
+
+    /**
+     * Set the value of the key, within the array's structure, that points to a node's label.
+     * @param string $inTag Value of the key, within the array's structure, that points to a node's label.
+     */
+    static public function setDataTag($inTag) {
+        self::$__dataTag = $inTag;
+    }
+
+    /**
+     * Set the value of the key, within the array's structure, that points to a node's children.
+     * @param string $inTag Value of the key, within the array's structure, that points to a node's children.
+     */
+    static public function setChildrenTag($inTag) {
+        self::$__childrenTag = $inTag;
+    }
 
     /**
      * Set the default function used to get a printable representation of a node's data.
@@ -125,6 +145,9 @@ class Tree
                 return $inSerialised;
             };
         }
+
+        self::$__dataTag = $inOptDataTag;
+        self::$__childrenTag = $inOptChildrenTag;
 
         $result = [ 'tree' => new Tree(), 'index' => [], 'id' => 0 ];
 
@@ -378,8 +401,8 @@ class Tree
             $currentNodeId = spl_object_hash($inNode);
 
             $arrayNode = [
-                'data' => $inOptDataSerializer($inNode->getData()),
-                'children' => []
+                self::$__dataTag => $inOptDataSerializer($inNode->getData()),
+                self::$__childrenTag => []
             ];
 
             $inOutResult['index'][$currentNodeId] = &$arrayNode;
@@ -392,7 +415,7 @@ class Tree
             $parentNode = $inNode->getParent();
             $parentNodeId = spl_object_hash($parentNode);
             $parentArrayNode = &$inOutResult['index'][$parentNodeId];
-            $parentArrayNode['children'][] = &$arrayNode;
+            $parentArrayNode[self::$__childrenTag][] = &$arrayNode;
         };
 
         $this->getRoot()->traverse($arrayMaker, $result);
@@ -441,24 +464,24 @@ class Tree
     static public function arrayTraverse(array $inNode, callable $inFunction, array &$inOutResult, array $inOptParent=null) {
 
         // Sanity checks
-        if (! array_key_exists('data', $inNode)) {
-            throw new \Exception("This given array in not a valid tree. Key 'data' is missing!");
+        if (! array_key_exists(self::$__dataTag, $inNode)) {
+            throw new \Exception("This given array in not a valid tree. Key '" . self::$__dataTag . "' is missing!");
         }
 
-        if (! array_key_exists('children', $inNode)) {
-            throw new \Exception("This given array in not a valid tree. Key 'children' is missing!");
+        if (! array_key_exists(self::$__childrenTag, $inNode)) {
+            throw new \Exception("This given array in not a valid tree. Key '" . self::$__childrenTag . "' is missing!");
         }
 
-        if (! is_array($inNode['children'])) {
-            throw new \Exception("This given array in not a valid tree. Key 'children' is not an array!");
+        if (! is_array($inNode[self::$__childrenTag])) {
+            throw new \Exception("This given array in not a valid tree. Key '" . self::$__childrenTag . "' is not an array!");
         }
 
         // Call the user provided function on the current node.
-        $inFunction($inNode, count($inNode['children']) > 0, $inOptParent, $inOutResult);
+        $inFunction($inNode, count($inNode[self::$__childrenTag]) > 0, $inOptParent, $inOutResult);
 
         // Walk through the children.
-        foreach ($inNode['children'] as $_child) {
-            if (count($_child['children']) > 0) {
+        foreach ($inNode[self::$__childrenTag] as $_child) {
+            if (count($_child[self::$__childrenTag]) > 0) {
                 // The actual node is not a leaf. Let's walk through the children.
                 self::arrayTraverse($_child, $inFunction, $inOutResult, $inNode);
                 // As long as we encounter a child, we call the method recursively. Thus method's execution's contexts pile up.
